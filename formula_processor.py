@@ -2,6 +2,7 @@ import fitz  # PyMuPDF
 import numpy as np
 from PIL import Image
 import pytesseract
+pytesseract.pytesseract.tesseract_cmd = r'D:\Program Files\Tesseract-OCR\tesseract.exe'
 from docx import Document
 from docx.shared import Inches
 import re
