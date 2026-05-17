@@ -24,34 +24,26 @@ def check_python_version():
 
 def check_required_modules():
     print_section("2. 检查必需的Python模块")
-    required = {
-        'PyQt5': 'QtWidgets',
-        'PyQt5.QtCore': 'PYQT_VERSION_STR',
-        'fitz': 'open',
-        'pdf2docx': 'Converter',
-        'pytesseract': 'image_to_string',
-        'PIL': 'Image',
-        'docx': 'Document',
-        'cv2': '__version__',
-        'numpy': 'array'
-    }
+    required = [
+        'PyQt5',
+        'PyQt5.QtWidgets',
+        'PyQt5.QtCore',
+        'fitz',
+        'pdf2docx',
+        'pytesseract',
+        'PIL',
+        'docx',
+        'cv2',
+        'numpy'
+    ]
     
     all_ok = True
-    for module_name, check_attr in required.items():
+    for module_name in required:
         try:
-            if module_name == 'PIL':
-                module = __import__('PIL')
-            elif module_name == 'docx':
-                module = __import__('docx')
-            else:
-                module = __import__(module_name)
-            
-            if hasattr(module, check_attr):
-                print(f"✓ {module_name:<15} - 已安装")
-            else:
-                print(f"⚠ {module_name:<15} - 已安装但缺少 {check_attr}")
+            __import__(module_name)
+            print(f"✓ {module_name:<20} - 已安装")
         except ImportError:
-            print(f"✗ {module_name:<15} - 未安装")
+            print(f"✗ {module_name:<20} - 未安装")
             all_ok = False
     
     return all_ok
@@ -177,6 +169,13 @@ def test_ocr():
         import pytesseract
         from PIL import Image
         import numpy as np
+        import os
+        
+        # 设置 tesseract 路径
+        tesseract_path = r'D:\Program Files\Tesseract-OCR\tesseract.exe'
+        if os.path.exists(tesseract_path):
+            pytesseract.pytesseract.tesseract_cmd = tesseract_path
+            print(f"✓ 设置Tesseract路径: {tesseract_path}")
         
         # 创建简单的测试图像
         print("创建测试图像...")
