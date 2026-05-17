@@ -3,7 +3,7 @@ import os
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QFileDialog, QProgressBar, QTextEdit,
-    QCheckBox, QGroupBox, QLineEdit
+    QCheckBox, QGroupBox, QLineEdit, QMessageBox
 )
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 import fitz  # PyMuPDF
@@ -16,6 +16,7 @@ from docx import Document
 from docx.shared import Inches
 import git
 import requests
+from formula_processor import FormulaProcessor
 
 
 class PDFConverterThread(QThread):
@@ -23,15 +24,20 @@ class PDFConverterThread(QThread):
     status_update = pyqtSignal(str)
     finished = pyqtSignal(bool, str)
 
-    def __init__(self, pdf_path, output_path, use_ocr=False):
+    def __init__(self, pdf_path, output_path, use_ocr=False, detect_formulas=False):
         super().__init__()
         self.pdf_path = pdf_path
         self.output_path = output_path
         self.use_ocr = use_ocr
+        self.detect_formulas = detect_formulas
+        self.formula_processor = FormulaProcessor()
 
     def run(self):
         try:
-            if self.use_ocr:
+            if self.detect_formulas:
+                self.status_update.emit("正在检测和处理公式...")
+                self._convert_with_formula_detection()
+            elif self.use_ocr:
                 self.status_update.emit("正在使用OCR模式处理PDF...")
                 self._convert_with_ocr()
             else:
@@ -78,6 +84,15 @@ class PDFConverterThread(QThread):
         
         pdf.close()
         doc.save(self.output_path)
+        self.progress_update.emit(100)
+
+    def _convert_with_formula_detection(self):
+        """使用公式检测进行转换"""
+        self.formula_processor.process_pdf_with_formulas(
+            self.pdf_path,
+            self.output_path,
+            self.use_ocr
+        )
         self.progress_update.emit(100)
 
 
@@ -152,7 +167,9 @@ class PDFToWordConverter(QMainWindow):
         options_group = QGroupBox("转换选项")
         options_layout = QVBoxLayout()
         self.ocr_checkbox = QCheckBox("使用OCR模式（适用于扫描件）")
+        self.formula_checkbox = QCheckBox("检测和处理公式")
         options_layout.addWidget(self.ocr_checkbox)
+        options_layout.addWidget(self.formula_checkbox)
         options_group.setLayout(options_layout)
         main_layout.addWidget(options_group)
 
@@ -211,7 +228,8 @@ class PDFToWordConverter(QMainWindow):
         self.converter_thread = PDFConverterThread(
             self.pdf_path,
             self.output_path,
-            self.ocr_checkbox.isChecked()
+            self.ocr_checkbox.isChecked(),
+            self.formula_checkbox.isChecked()
         )
         self.converter_thread.progress_update.connect(self.update_progress)
         self.converter_thread.status_update.connect(self.update_status)
