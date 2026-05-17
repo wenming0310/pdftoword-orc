@@ -1,4 +1,3 @@
-tkinter
 PyQt5
 pdf2docx
 pymupdf
