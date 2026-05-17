@@ -26,6 +26,7 @@ def check_required_modules():
     print_section("2. 检查必需的Python模块")
     required = {
         'PyQt5': 'QtWidgets',
+        'PyQt5.QtCore': 'PYQT_VERSION_STR',
         'fitz': 'open',
         'pdf2docx': 'Converter',
         'pytesseract': 'image_to_string',
@@ -55,8 +56,43 @@ def check_required_modules():
     
     return all_ok
 
+def check_pyqt_platform():
+    print_section("3. 检查PyQt5平台插件")
+    try:
+        import PyQt5
+        from PyQt5.QtCore import QLibraryInfo
+        print(f"✓ PyQt5 版本: {PyQt5.QtCore.PYQT_VERSION_STR}")
+        
+        # 尝试获取Qt插件路径
+        try:
+            plugins_path = QLibraryInfo.location(QLibraryInfo.PluginsPath)
+            print(f"✓ Qt插件路径: {plugins_path}")
+            
+            # 检查平台插件是否存在
+            import os
+            platforms_path = os.path.join(plugins_path, 'platforms')
+            if os.path.exists(platforms_path):
+                print(f"✓ 平台插件目录存在")
+                qwindows_dll = os.path.join(platforms_path, 'qwindows.dll')
+                if os.path.exists(qwindows_dll):
+                    print(f"✓ qwindows.dll 存在")
+                else:
+                    print(f"⚠ qwindows.dll 未找到")
+            else:
+                print(f"⚠ 平台插件目录不存在")
+        except Exception as e:
+            print(f"⚠ 无法获取Qt插件信息: {e}")
+        
+        return True
+    except Exception as e:
+        print(f"✗ PyQt5检查失败: {e}")
+        print("\n  解决方案:")
+        print("  1. 运行 修复依赖.bat 重新安装PyQt5")
+        print("  2. 或者运行: pip install --upgrade PyQt5 PyQt5-tools")
+        return False
+
 def check_tesseract():
-    print_section("3. 检查Tesseract OCR")
+    print_section("4. 检查Tesseract OCR")
     tesseract_path = r'D:\Program Files\Tesseract-OCR\tesseract.exe'
     
     # 检查配置文件中的路径
@@ -196,6 +232,7 @@ def main():
     # 运行所有检查
     results.append(("Python版本", check_python_version()))
     results.append(("必需模块", check_required_modules()))
+    results.append(("PyQt5平台", check_pyqt_platform()))
     results.append(("Tesseract OCR", check_tesseract()))
     results.append(("PDF转换", test_pdf_conversion()))
     results.append(("OCR功能", test_ocr()))

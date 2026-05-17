@@ -1,4 +1,5 @@
-PyQt5
+PyQt5>=5.15.0
+PyQt5-tools>=5.15.0
 pdf2docx
 pymupdf
 python-docx
@@ -8,4 +9,3 @@ opencv-python
 numpy
 pygments
 requests
-gitpython
