@@ -10,10 +10,22 @@ echo [Step 1/2] Upgrading pip...
 python -m pip install --upgrade pip
 echo.
 
-echo [Step 2/2] Installing dependencies from requirements.txt...
-pip install -r requirements.txt
+echo [Step 2/2] Installing dependencies...
+echo This may take several minutes, please wait...
 echo.
 
+python -m pip install PyQt5
+python -m pip install pymupdf
+python -m pip install pdf2docx
+python -m pip install pytesseract
+python -m pip install Pillow
+python -m pip install python-docx
+python -m pip install opencv-python
+python -m pip install numpy
+python -m pip install requests
+python -m pip install gitpython
+
+echo.
 echo ==============================================================
 echo        Installation Complete
 echo ==============================================================
@@ -32,8 +44,12 @@ python -c "import pytesseract; print('[OK] pytesseract')"
 python -c "import PIL; print('[OK] PIL')"
 python -c "import docx; print('[OK] docx')"
 python -c "import cv2; print('[OK] opencv')"
-python -c "import numpy; print('[OK] numpy')"
+python -m pip show numpy >nul 2>&1 && echo [OK] numpy || echo [FAIL] numpy
 
+echo.
+echo ==============================================================
+echo        All Done!
+echo ==============================================================
 echo.
 echo If all show [OK], you can now run the program
 echo Run: start_program.bat
