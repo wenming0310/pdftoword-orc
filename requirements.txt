@@ -1,0 +1,12 @@
+tkinter
+PyQt5
+pdf2docx
+pymupdf
+python-docx
+pytesseract
+Pillow
+opencv-python
+numpy
+pygments
+requests
+gitpython
