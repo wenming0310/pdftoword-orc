@@ -9,6 +9,7 @@ from PyQt5.QtCore import Qt, QThread, pyqtSignal
 import fitz  # PyMuPDF
 from pdf2docx import Converter
 import pytesseract
+pytesseract.pytesseract.tesseract_cmd = r'D:\Program Files\Tesseract-OCR\tesseract.exe'
 from PIL import Image
 import cv2
 import numpy as np
