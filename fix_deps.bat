@@ -12,6 +12,10 @@ if errorlevel 1 (
     exit /b 1
 )
 
+echo [SUCCESS] Python installed
+python --version
+echo.
+
 echo [INFO] Checking and fixing dependencies...
 echo.
 
@@ -22,13 +26,13 @@ echo.
 
 REM Reinstall PyQt5
 echo [2/4] Reinstalling PyQt5 and PyQt5-tools...
-pip uninstall PyQt5 PyQt5-tools -y
-pip install PyQt5 PyQt5-tools
+python -m pip uninstall PyQt5 PyQt5-tools -y
+python -m pip install PyQt5 PyQt5-tools
 echo.
 
 REM Install other dependencies
 echo [3/4] Installing other dependencies...
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 echo.
 
 REM Verify installation
