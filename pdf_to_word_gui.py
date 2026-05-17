@@ -14,7 +14,14 @@ import cv2
 import numpy as np
 from docx import Document
 from docx.shared import Inches
-import git
+
+git_available = False
+try:
+    import git
+    git_available = True
+except (ImportError, Exception):
+    pass
+
 import requests
 from formula_processor import FormulaProcessor
 
@@ -106,6 +113,10 @@ class GitHubSyncThread(QThread):
         self.commit_message = commit_message
 
     def run(self):
+        if not git_available:
+            self.finished.emit(False, "Git功能不可用：系统未安装Git或Git未在PATH中。\n请安装Git并确保其在系统PATH中。")
+            return
+        
         try:
             if not os.path.exists(os.path.join(self.repo_path, '.git')):
                 self.status_update.emit("初始化Git仓库...")
@@ -190,6 +201,9 @@ class PDFToWordConverter(QMainWindow):
         self.convert_button.setEnabled(False)
         self.github_button = QPushButton("同步到GitHub")
         self.github_button.clicked.connect(self.sync_to_github)
+        if not git_available:
+            self.github_button.setEnabled(False)
+            self.github_button.setToolTip("Git不可用：系统未安装Git或Git未在PATH中")
         button_layout.addWidget(self.convert_button)
         button_layout.addWidget(self.github_button)
         main_layout.addLayout(button_layout)
@@ -252,6 +266,13 @@ class PDFToWordConverter(QMainWindow):
             self.status_label.setText("转换失败")
 
     def sync_to_github(self):
+        if not git_available:
+            QMessageBox.warning(self, "Git不可用", 
+                "Git功能不可用：系统未安装Git或Git未在PATH中。\n\n"
+                "请安装Git并确保其在系统PATH中，然后重启程序。\n"
+                "下载地址：https://git-scm.com/download/win")
+            return
+        
         self.convert_button.setEnabled(False)
         self.github_button.setEnabled(False)
         self.log("开始同步到GitHub...")
