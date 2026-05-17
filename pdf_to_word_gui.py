@@ -16,13 +16,6 @@ import numpy as np
 from docx import Document
 from docx.shared import Inches
 
-git_available = False
-try:
-    import git
-    git_available = True
-except (ImportError, Exception):
-    pass
-
 import requests
 from formula_processor import FormulaProcessor
 
@@ -104,38 +97,6 @@ class PDFConverterThread(QThread):
         self.progress_update.emit(100)
 
 
-class GitHubSyncThread(QThread):
-    status_update = pyqtSignal(str)
-    finished = pyqtSignal(bool, str)
-
-    def __init__(self, repo_path, commit_message="更新代码"):
-        super().__init__()
-        self.repo_path = repo_path
-        self.commit_message = commit_message
-
-    def run(self):
-        if not git_available:
-            self.finished.emit(False, "Git功能不可用：系统未安装Git或Git未在PATH中。\n请安装Git并确保其在系统PATH中。")
-            return
-        
-        try:
-            if not os.path.exists(os.path.join(self.repo_path, '.git')):
-                self.status_update.emit("初始化Git仓库...")
-                repo = git.Repo.init(self.repo_path)
-            else:
-                repo = git.Repo(self.repo_path)
-            
-            self.status_update.emit("添加文件到暂存区...")
-            repo.git.add(A=True)
-            
-            self.status_update.emit("提交更改...")
-            repo.index.commit(self.commit_message)
-            
-            self.finished.emit(True, "代码同步成功！")
-        except Exception as e:
-            self.finished.emit(False, f"同步失败: {str(e)}")
-
-
 class PDFToWordConverter(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -200,13 +161,7 @@ class PDFToWordConverter(QMainWindow):
         self.convert_button = QPushButton("开始转换")
         self.convert_button.clicked.connect(self.start_conversion)
         self.convert_button.setEnabled(False)
-        self.github_button = QPushButton("同步到GitHub")
-        self.github_button.clicked.connect(self.sync_to_github)
-        if not git_available:
-            self.github_button.setEnabled(False)
-            self.github_button.setToolTip("Git不可用：系统未安装Git或Git未在PATH中")
         button_layout.addWidget(self.convert_button)
-        button_layout.addWidget(self.github_button)
         main_layout.addLayout(button_layout)
 
         # 日志区域
@@ -239,7 +194,6 @@ class PDFToWordConverter(QMainWindow):
 
     def start_conversion(self):
         self.convert_button.setEnabled(False)
-        self.github_button.setEnabled(False)
         self.converter_thread = PDFConverterThread(
             self.pdf_path,
             self.output_path,
@@ -260,36 +214,8 @@ class PDFToWordConverter(QMainWindow):
 
     def conversion_finished(self, success, message):
         self.convert_button.setEnabled(True)
-        self.github_button.setEnabled(True)
         self.log(message)
-        self.status_label.setText("就绪")
-        if not success:
-            self.status_label.setText("转换失败")
-
-    def sync_to_github(self):
-        if not git_available:
-            QMessageBox.warning(self, "Git不可用", 
-                "Git功能不可用：系统未安装Git或Git未在PATH中。\n\n"
-                "请安装Git并确保其在系统PATH中，然后重启程序。\n"
-                "下载地址：https://git-scm.com/download/win")
-            return
-        
-        self.convert_button.setEnabled(False)
-        self.github_button.setEnabled(False)
-        self.log("开始同步到GitHub...")
-        self.github_thread = GitHubSyncThread(os.path.dirname(os.path.abspath(__file__)))
-        self.github_thread.status_update.connect(self.update_status)
-        self.github_thread.finished.connect(self.github_sync_finished)
-        self.github_thread.start()
-
-    def github_sync_finished(self, success, message):
-        self.convert_button.setEnabled(True)
-        self.github_button.setEnabled(True)
-        self.log(message)
-        if success:
-            self.status_label.setText("同步完成")
-        else:
-            self.status_label.setText("同步失败")
+        self.status_label.setText("就绪") if success else self.status_label.setText("转换失败")
 
     def log(self, message):
         self.log_text.append(message)

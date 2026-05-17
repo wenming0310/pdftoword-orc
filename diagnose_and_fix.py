@@ -92,33 +92,6 @@ def check_tesseract():
         print("  请下载并安装: https://github.com/UB-Mannheim/tesseract/wiki")
         return False
 
-def check_git():
-    print_section("4. 检查Git")
-    try:
-        import git
-        print("✓ GitPython库已安装")
-        
-        # 检查git命令是否可用
-        import subprocess
-        result = subprocess.run(['git', '--version'], 
-                             capture_output=True, text=True)
-        if result.returncode == 0:
-            print(f"✓ Git命令行工具: {result.stdout.strip()}")
-            print("✓ GitHub同步功能可用")
-            return True
-        else:
-            print("⚠ GitPython库已安装，但Git命令行工具不可用")
-            print("  请安装Git for Windows: https://git-scm.com/download/win")
-            print("  安装后重启程序")
-            return False
-    except ImportError:
-        print("⚠ GitPython库未安装（可选功能）")
-        print("  GitHub同步功能将不可用，但不影响PDF转换功能")
-        return False
-    except Exception as e:
-        print(f"⚠ Git检查出错: {e}")
-        return False
-
 def test_pdf_conversion():
     print_section("5. 测试PDF转换功能")
     try:
@@ -198,8 +171,6 @@ def check_main_program():
             print("✓ PDFToWordConverter类可用")
         if hasattr(pdf_to_word_gui, 'PDFConverterThread'):
             print("✓ PDFConverterThread类可用")
-        if hasattr(pdf_to_word_gui, 'GitHubSyncThread'):
-            print("✓ GitHubSyncThread类可用")
             
         return True
     except ImportError as e:
@@ -226,7 +197,6 @@ def main():
     results.append(("Python版本", check_python_version()))
     results.append(("必需模块", check_required_modules()))
     results.append(("Tesseract OCR", check_tesseract()))
-    results.append(("Git", check_git()))
     results.append(("PDF转换", test_pdf_conversion()))
     results.append(("OCR功能", test_ocr()))
     results.append(("主程序", check_main_program()))
