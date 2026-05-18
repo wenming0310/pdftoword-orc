@@ -25,9 +25,9 @@ python -m pip install --upgrade pip
 echo.
 
 REM Reinstall PyQt5
-echo [2/4] Reinstalling PyQt5 and PyQt5-tools...
-python -m pip uninstall PyQt5 PyQt5-tools -y
-python -m pip install PyQt5 PyQt5-tools
+echo [2/4] Reinstalling PyQt5...
+python -m pip uninstall PyQt5 -y
+python -m pip install PyQt5
 echo.
 
 REM Install other dependencies
