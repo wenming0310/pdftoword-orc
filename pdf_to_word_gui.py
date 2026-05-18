@@ -1,5 +1,14 @@
 import sys
 import os
+import site
+
+# 修复 PyQt5 Windows 平台插件问题
+os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = os.path.join(site.getsitepackages()[0], 'PyQt5', 'Qt6', 'plugins', 'platforms')
+if not os.path.exists(os.environ['QT_QPA_PLATFORM_PLUGIN_PATH']):
+    os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = os.path.join(site.getsitepackages()[-1], 'PyQt5', 'Qt6', 'plugins', 'platforms')
+if not os.path.exists(os.environ['QT_QPA_PLATFORM_PLUGIN_PATH']):
+    os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = os.path.join(sys.prefix, 'Lib', 'site-packages', 'PyQt5', 'Qt6', 'plugins', 'platforms')
+
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QFileDialog, QProgressBar, QTextEdit,
