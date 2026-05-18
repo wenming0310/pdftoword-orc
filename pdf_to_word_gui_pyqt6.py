@@ -16,7 +16,7 @@ from PIL import Image
 import cv2
 import numpy as np
 from docx import Document
-from docx.shared import Inches
+from docx.shared import Inches, Cm
 
 import requests
 from formula_processor import FormulaProcessor
@@ -65,11 +65,16 @@ class PDFConverterThread(QThread):
         for page_num, page in enumerate(doc):
             self.progress_update.emit(int((page_num / total_pages) * 100))
             
-            pix = page.get_pixmap()
+            pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))  # 2x zoom for better OCR
             img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
             
-            text = pytesseract.image_to_string(img)
-            word_doc.add_paragraph(text)
+            try:
+                text = pytesseract.image_to_string(img, lang='chi_sim+eng')
+            except:
+                text = pytesseract.image_to_string(img, lang='eng')
+            
+            if text.strip():
+                word_doc.add_paragraph(text)
             
             word_doc.add_page_break()
         
@@ -85,23 +90,42 @@ class PDFConverterThread(QThread):
         for page_num, page in enumerate(doc):
             self.progress_update.emit(int((page_num / total_pages) * 100))
             
-            pix = page.get_pixmap()
+            pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
             img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
             
             img_np = np.array(img)
             has_formulas, formula_regions = self.formula_processor.detect_formulas(img_np)
             
-            text = pytesseract.image_to_string(img)
-            word_doc.add_paragraph(text)
+            try:
+                text = pytesseract.image_to_string(img, lang='chi_sim+eng')
+            except:
+                text = pytesseract.image_to_string(img, lang='eng')
+            
+            if text.strip():
+                word_doc.add_paragraph(text)
             
             for region in formula_regions:
                 x, y, w, h = region
                 formula_img = img.crop((x, y, x + w, y + h))
-                temp_path = f"temp_formula.png"
-                formula_img.save(temp_path)
-                word_doc.add_picture(temp_path, width=Inches(4))
-                if os.path.exists(temp_path):
-                    os.remove(temp_path)
+                
+                if w > 100 and h > 50:  # Only save large enough regions
+                    temp_path = f"temp_formula_{page_num}_{x}_{y}.png"
+                    formula_img.save(temp_path)
+                    
+                    # Calculate appropriate image size
+                    max_width = 16  # cm
+                    img_width, img_height = formula_img.size
+                    aspect_ratio = img_height / img_width
+                    
+                    if img_width > img_height * 2:  # Wide image
+                        word_doc.add_picture(temp_path, width=Cm(max_width))
+                    elif img_height > img_width * 2:  # Tall image
+                        word_doc.add_picture(temp_path, height=Cm(10))
+                    else:
+                        word_doc.add_picture(temp_path, width=Cm(min(max_width, 12)))
+                    
+                    if os.path.exists(temp_path):
+                        os.remove(temp_path)
             
             word_doc.add_page_break()
         
