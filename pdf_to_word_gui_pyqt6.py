@@ -96,7 +96,7 @@ class PDFConverterThread(QThread):
             
             for region in formula_regions:
                 x, y, w, h = region
-                formula_img = img.crop((x, y, x + w, y + h)
+                formula_img = img.crop((x, y, x + w, y + h))
                 temp_path = f"temp_formula.png"
                 formula_img.save(temp_path)
                 word_doc.add_picture(temp_path, width=Inches(4))
