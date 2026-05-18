@@ -6,11 +6,36 @@ pytesseract.pytesseract.tesseract_cmd = r'D:\Program Files\Tesseract-OCR\tessera
 from docx import Document
 from docx.shared import Inches
 import re
+import cv2
 
 
 class FormulaProcessor:
     def __init__(self):
         pass
+    
+    def detect_formulas(self, img_np):
+        """
+        Detect formula regions in an image
+        Returns (has_formulas: bool, formula_regions: list of (x, y, w, h))
+        """
+        gray = cv2.cvtColor(img_np, cv2.COLOR_RGB2GRAY)
+        
+        formula_regions = []
+        
+        _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+        contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        for contour in contours:
+            x, y, w, h = cv2.boundingRect(contour)
+            area = w * h
+            
+            if area > 500 and area < img_np.shape[0] * img_np.shape[1] * 0.3:
+                aspect_ratio = w / h if h > 0 else 0
+                if 0.2 < aspect_ratio < 5:
+                    formula_regions.append((x, y, w, h))
+        
+        has_formulas = len(formula_regions) > 0
+        return has_formulas, formula_regions
 
     def is_likely_formula(self, text):
         """判断文本是否可能是公式"""
