@@ -1,0 +1,10 @@
+PyQt6>=6.4.0
+pdf2docx
+pymupdf
+python-docx
+pytesseract
+Pillow
+opencv-python
+numpy
+pygments
+requests
