@@ -9,7 +9,6 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
 
-# Import the new conversion modules
 from pdf_to_markdown import PDFToMarkdown, save_markdown
 from markdown_to_word import MarkdownToWord
 from pdf2docx import Converter
@@ -32,15 +31,17 @@ class PDFConverterThread(QThread):
     def run(self):
         try:
             if self.use_markdown:
-                # Use the new PDF → Markdown → Word pipeline
                 self.status_update.emit("Converting PDF to Markdown...")
-                self.progress_update.emit(25)
+                self.progress_update.emit(5)
                 
                 pdf2md = PDFToMarkdown(self.pdf_path, output_dir='temp_images')
-                markdown = pdf2md.convert(use_ocr=self.use_ocr, detect_formulas=self.detect_formulas)
+                markdown = pdf2md.convert(
+                    use_ocr=self.use_ocr, 
+                    detect_formulas=self.detect_formulas,
+                    progress_callback=self.progress_update.emit
+                )
                 self.progress_update.emit(50)
                 
-                # Save intermediate Markdown if needed
                 if self.save_intermediate:
                     md_path = self.output_path.replace('.docx', '.md')
                     save_markdown(markdown, md_path)
@@ -50,12 +51,11 @@ class PDFConverterThread(QThread):
                 self.status_update.emit("Converting Markdown to Word...")
                 
                 md2word = MarkdownToWord(markdown, image_dir='temp_images')
-                md2word.convert(self.output_path)
+                md2word.convert(self.output_path, progress_callback=self.progress_update.emit)
                 
                 self.progress_update.emit(100)
                 self.finished.emit(True, f"Conversion completed! (using Markdown pipeline)")
             else:
-                # Use the original pdf2docx directly
                 self.status_update.emit("Converting PDF to Word directly...")
                 self.progress_update.emit(50)
                 
@@ -85,7 +85,6 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout()
         central_widget.setLayout(layout)
         
-        # File selection group
         file_group = QGroupBox("File Selection")
         file_layout = QVBoxLayout()
         
@@ -111,7 +110,6 @@ class MainWindow(QMainWindow):
         file_layout.addLayout(output_layout)
         file_group.setLayout(file_layout)
         
-        # Options group
         options_group = QGroupBox("Conversion Options")
         options_layout = QVBoxLayout()
         
@@ -127,14 +125,11 @@ class MainWindow(QMainWindow):
         options_layout.addWidget(self.save_intermediate_check)
         options_group.setLayout(options_layout)
         
-        # Convert button
         self.convert_btn = QPushButton("Convert")
         self.convert_btn.clicked.connect(self.start_conversion)
         
-        # Progress bar
         self.progress_bar = QProgressBar()
         
-        # Log area
         self.log_text = QTextEdit()
         self.log_text.setReadOnly(True)
         
